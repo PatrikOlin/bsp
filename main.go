@@ -45,6 +45,7 @@ func hideNode() {
 
 func fetchNode() {
 	saveCurrentNodeID()
+	desktopID := getCurrentDesktopID()
 
 	out, err := exec.Command("bspc", "query", "-N", "-n", ".hidden").Output()
 	if err != nil {
@@ -52,8 +53,12 @@ func fetchNode() {
 	}
 	nodeID := strings.TrimSpace(string(out))
 
-	cmd := exec.Command("bspc", "node", nodeID, "-g", "hidden=off", "-f")
-	cmd.Run()
+	cmd := exec.Command("bspc", "node", nodeID, "-g", "hidden=off", "-d", desktopID, "-f")
+	err = cmd.Run()
+	if err != nil {
+		log.Fatalln("Could not run command ", err)
+	}
+
 }
 
 func saveCurrentNodeID() {
@@ -62,6 +67,14 @@ func saveCurrentNodeID() {
 		log.Fatalln(err)
 	}
 	writeToFile(strings.TrimSpace(string(cmd)))
+}
+
+func getCurrentDesktopID() string {
+	cmd, err := exec.Command("bspc", "query", "-D", "-d").Output()
+	if err != nil {
+		log.Fatalln(err)
+	}
+	return strings.TrimSpace(string(cmd))
 }
 
 func writeToFile(nodeID string) {
